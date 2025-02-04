@@ -1,0 +1,32 @@
+services:
+  postgres:
+    image: postgres:latest
+    container_name: penisoid_postgres_container
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: insecure
+      POSTGRES_DB: message
+    ports:
+      - "5432:5432"
+    restart: always
+
+  ollama:
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [ gpu ]
+
+    image: ollama/ollama
+    container_name: ollama
+    volumes:
+      - ollama:/root/.ollama
+    ports:
+      - "11434:11434"
+    restart: unless-stopped
+
+volumes:
+  ollama:
+    external: true
