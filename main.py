@@ -15,7 +15,9 @@ OLLAMA_MODEL = os.getenv("OLLAMA_MODEL")
 
 
 async def hello(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    await update.message.reply_text(f'Hello {update.effective_user.first_name}')
+    hello = f"Nice to meet you, {update.effective_user.first_name}!\n" \
+            f"It's great time to talk about something with miumiu bot!"
+    await update.message.reply_text(hello)
 
 
 async def clear_history(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -40,7 +42,12 @@ async def penis(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     #  catch error and answer
     if response.status_code == 200:
         print("Response:", response.json()['message']['content'])
-        await update.message.reply_text(response.json()['message']['content'])
+        #  catch message size overflow
+        if len(response.json()['message']['content']) <= 4096:
+            await update.message.reply_text(response.json()['message']['content'])
+        else:
+            for i in range(len(response.json()['message']['content']) // 4096):
+                await update.message.reply_text(response.json()['message']['content'][i * 4096:(i + 1) * 4096])
     else:
         print(f'ERROR: {response.text}')
         await update.message.reply_text(response.text)
@@ -54,6 +61,7 @@ async def penis(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 app = ApplicationBuilder().token(TG_TOKEN).build()
 
+app.add_handler(CommandHandler("start", hello))
 app.add_handler(CommandHandler("hello", hello))
 app.add_handler(CommandHandler("clear", clear_history))
 app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, penis))
