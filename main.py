@@ -1,7 +1,17 @@
+import os
+from dotenv import load_dotenv
 import db
 import requests
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters
+
+load_dotenv()
+#  telegram bot token
+TG_TOKEN = os.getenv("TG_TOKEN")
+
+#  ollama
+OLLAMA_URL = os.getenv("OLLAMA_URL")
+OLLAMA_MODEL = os.getenv("OLLAMA_MODEL")
 
 
 async def hello(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -20,13 +30,12 @@ async def penis(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     print(f'Context is: {messages}')
 
     #  response
-    url = "http://localhost:11434/api/chat"
     payload = {
-        "model": "deepseek-r1:8b",
+        "model": OLLAMA_MODEL,
         "messages": messages,
         "stream": False
     }
-    response = requests.post(url, json=payload)
+    response = requests.post(OLLAMA_URL, json=payload)
 
     #  catch error and answer
     if response.status_code == 200:
@@ -42,7 +51,8 @@ async def penis(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     db.write(update.message.text, update.effective_chat.id, update.effective_user.id, 'user')
     db.write(response_text, update.effective_chat.id, update.effective_user.id, 'assistant')
 
-app = ApplicationBuilder().token("6797914435:AAEIPrVlNLVbDipfS5D5GBWl12QPPkhpzPs").build()
+
+app = ApplicationBuilder().token(TG_TOKEN).build()
 
 app.add_handler(CommandHandler("hello", hello))
 app.add_handler(CommandHandler("clear", clear_history))
